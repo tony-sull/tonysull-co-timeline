@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.0.0",
-    "@indiepub/admin": "1.0.0-beta.24",
-    "@indiepub/astro": "1.0.0-beta.23",
+    "@indiepub/admin": "1.0.0-beta.25",
+    "@indiepub/astro": "1.0.0-beta.25",
     "astro-icon": "^1.1.5"
   },
   "devDependencies": {
@@ -25,5 +25,6 @@
     "astro": "^6.0.0",
     "typescript": "^5.9.3",
     "wrangler": "^4.73.0"
-  }
+  },
+  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
 }
