@@ -1,0 +1,11 @@
+name = "tonysull-co-timeline-scheduler"
+main = "node_modules/@indiepub/astro/src/scheduler.ts"
+compatibility_date = "2025-01-01"
+
+[triggers]
+crons = ["0 */6 * * *"] # Every 6 hours
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tonysull-co-timeline-db"
+database_id = "b83bbfb4-6a6a-4540-a3ea-cda42a91ef69"

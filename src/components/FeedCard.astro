@@ -1,0 +1,75 @@
+---
+import type { Entry, InteractionCounts } from '@indiepub/types';
+import NoteCard from './cards/NoteCard.astro';
+import ArticleCard from './cards/ArticleCard.astro';
+import PhotoCard from './cards/PhotoCard.astro';
+import BookmarkCard from './cards/BookmarkCard.astro';
+import VerbActivityCard from './cards/VerbActivityCard.astro';
+import InteractionCard from './cards/InteractionCard.astro';
+
+interface Props {
+  entry: Entry;
+  counts?: InteractionCounts | undefined;
+}
+
+const { entry, counts } = Astro.props;
+const detailUrl = `/posts/${entry.slug}`;
+const pubDate = entry.publishedAt ?? entry.createdAt;
+
+const typeBadgeLabel: Partial<Record<string, string>> = {
+  article:  'article',
+  photo:    'photo',
+  bookmark: 'bookmark',
+  reply:    'reply',
+  like:     'like',
+  repost:   'repost',
+  video:    'video',
+  checkin:  'checkin',
+  rsvp:     'rsvp',
+  event:    'event',
+  watch:    'watched',
+  read:     'read',
+  listen:   'listened',
+  play:     'played',
+};
+
+const showBadge = entry.type !== 'note';
+const badgeLabel = showBadge ? typeBadgeLabel[entry.type] : undefined;
+const isVerb = ['watch', 'read', 'listen', 'play'].includes(entry.type);
+const isInteraction = entry.type === 'like' || entry.type === 'repost' || entry.type === 'reply';
+---
+
+<article class="h-entry">
+  {entry.type === 'note' && (
+    <NoteCard entry={entry} counts={counts} detailUrl={detailUrl} pubDate={pubDate} />
+  )}
+  {entry.type === 'article' && (
+    <ArticleCard entry={entry} counts={counts} detailUrl={detailUrl} pubDate={pubDate} badgeLabel={badgeLabel} />
+  )}
+  {entry.type === 'photo' && (entry.attachments?.length ?? 0) > 0 && (
+    <PhotoCard entry={entry} counts={counts} detailUrl={detailUrl} pubDate={pubDate} badgeLabel={badgeLabel} />
+  )}
+  {entry.type === 'bookmark' && entry.bookmarkOf && (
+    <BookmarkCard entry={entry} counts={counts} detailUrl={detailUrl} pubDate={pubDate} badgeLabel={badgeLabel} />
+  )}
+  {isVerb && (
+    <VerbActivityCard entry={entry} counts={counts} detailUrl={detailUrl} pubDate={pubDate} badgeLabel={badgeLabel} />
+  )}
+  {isInteraction && (
+    <InteractionCard entry={entry} detailUrl={detailUrl} pubDate={pubDate} badgeLabel={badgeLabel} />
+  )}
+</article>
+
+<style>
+  article {
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: background-color var(--transition);
+  }
+
+  article:hover {
+    background-color: var(--color-surface-2);
+  }
+</style>

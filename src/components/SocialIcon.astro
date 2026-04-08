@@ -1,0 +1,33 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { SocialLinkIcon } from '@indiepub/types';
+
+interface Props {
+  icon: SocialLinkIcon;
+  'aria-hidden'?: boolean | 'true' | 'false' | undefined;
+}
+
+const { icon, ...rest } = Astro.props;
+
+const iconMap: Record<string, string> = {
+  github:    'social/github',
+  mastodon:  'social/mastodon',
+  bluesky:   'social/bluesky',
+  twitter:   'social/x',
+  linkedin:  'social/linkedin',
+  instagram: 'social/instagram',
+  youtube:   'social/youtube',
+  twitch:    'social/twitch',
+  threads:   'social/threads',
+  gitlab:    'social/gitlab',
+  codepen:   'social/codepen',
+  dribbble:  'social/dribbble',
+  rss:       'rss',
+  email:     'mail',
+  website:   'globe',
+};
+
+const name = iconMap[icon] ?? 'link';
+---
+
+<Icon name={name} {...rest} />

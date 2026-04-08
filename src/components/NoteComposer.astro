@@ -1,0 +1,814 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  defaultType?: string | undefined;
+}
+
+const { defaultType = "note" } = Astro.props;
+
+if (!Astro.locals.isAdmin) return;
+
+const types = [
+  { value: "note", icon: "pen-line", label: "Note", extraField: "none" },
+  { value: "reply", icon: "reply", label: "Reply", extraField: "inReplyTo" },
+  { value: "like", icon: "heart", label: "Like", extraField: "likeOf" },
+  {
+    value: "bookmark",
+    icon: "bookmark",
+    label: "Bookmark",
+    extraField: "bookmarkOf",
+  },
+  {
+    value: "repost",
+    icon: "repeat-2",
+    label: "Repost",
+    extraField: "repostOf",
+  },
+  {
+    value: "checkin",
+    icon: "clapperboard",
+    label: "Activity",
+    extraField: "verb",
+  },
+];
+
+const currentType = types.find((t) => t.value === defaultType) ?? types[0];
+---
+
+<div class="composer" id="note-composer">
+  <form
+    class="composer-form"
+    action="/admin/compose"
+    method="post"
+    enctype="multipart/form-data"
+  >
+    <input type="hidden" name="type" id="composer-type" value={defaultType} />
+
+    <!-- Type selector -->
+    <div class="composer-top">
+      <div class="type-selector" id="type-selector">
+        <button
+          type="button"
+          class="type-toggle"
+          id="type-toggle"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+        >
+          <Icon
+            name={currentType.icon}
+            aria-hidden="true"
+            width="14"
+            height="14"
+          />
+          <span id="type-label">{currentType.label}</span>
+          <Icon
+            name="chevron-down"
+            aria-hidden="true"
+            width="12"
+            height="12"
+            class="chevron"
+          />
+        </button>
+        <div class="type-dropdown" id="type-dropdown" role="listbox" hidden>
+          {
+            types.map((t) => (
+              <button
+                type="button"
+                class="type-option"
+                role="option"
+                data-value={t.value}
+                data-icon={t.icon}
+                data-label={t.label}
+                data-extra={t.extraField}
+              >
+                <Icon name={t.icon} aria-hidden="true" width="14" height="14" />
+                {t.label}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      <span class="draft-indicator" id="draft-indicator" hidden
+        >Draft saved</span
+      >
+    </div>
+
+    <!-- Type-specific extra fields -->
+    <div
+      class="extra-field"
+      id="extra-inReplyTo"
+      hidden={defaultType !== "reply" || undefined}
+    >
+      <input
+        type="url"
+        name="inReplyTo"
+        class="field-input"
+        placeholder="Replying to... (URL)"
+      />
+    </div>
+    <div
+      class="extra-field"
+      id="extra-likeOf"
+      hidden={defaultType !== "like" || undefined}
+    >
+      <input
+        type="url"
+        name="likeOf"
+        class="field-input"
+        placeholder="Like of... (URL)"
+      />
+    </div>
+    <div
+      class="extra-field"
+      id="extra-bookmarkOf"
+      hidden={defaultType !== "bookmark" || undefined}
+    >
+      <input
+        type="url"
+        name="bookmarkOf"
+        class="field-input"
+        placeholder="Bookmark of... (URL)"
+      />
+    </div>
+    <div
+      class="extra-field"
+      id="extra-repostOf"
+      hidden={defaultType !== "repost" || undefined}
+    >
+      <input
+        type="url"
+        name="repostOf"
+        class="field-input"
+        placeholder="Repost of... (URL)"
+      />
+    </div>
+    <div
+      class="extra-field verb-fields"
+      id="extra-verb"
+      hidden={defaultType !== "checkin" || undefined}
+    >
+      <select name="verb" class="field-select">
+        <option value="watch">Watch</option>
+        <option value="read">Read</option>
+        <option value="listen">Listen</option>
+        <option value="play">Play</option>
+        <option value="eat">Eat</option>
+      </select>
+      <input
+        type="text"
+        name="objectName"
+        class="field-input"
+        placeholder="Title..."
+      />
+      <input
+        type="url"
+        name="objectUrl"
+        class="field-input"
+        placeholder="URL (optional)"
+      />
+      <fieldset class="rating">
+        <legend>Rating</legend>
+        <div class="stars">
+          {
+            [5, 4, 3, 2, 1].map((n) => (
+              <label class="star">
+                <input type="radio" name="rating" value={String(n)} />
+                <span aria-hidden="true">&#9733;</span>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- TipTap editor -->
+    <div class="editor-wrap" id="editor-mount"></div>
+    <input type="hidden" name="content" id="composer-content" />
+
+    <!-- Attachment previews -->
+    <div class="attachments" id="attachment-previews"></div>
+
+    <!-- Footer -->
+    <div class="composer-footer">
+      <button
+        type="button"
+        class="tool-btn"
+        id="attach-btn"
+        title="Attach image"
+      >
+        <Icon name="paperclip" aria-hidden="true" width="14" height="14" />
+      </button>
+      <input type="file" id="file-input" accept="image/*" multiple hidden />
+
+      <select name="visibility" class="field-select visibility-select">
+        <option value="public">Public</option>
+        <option value="unlisted">Unlisted</option>
+        <option value="private">Private</option>
+      </select>
+
+      <input type="text" name="tags" class="tag-input" placeholder="Tags..." />
+
+      <div class="footer-right">
+        <button
+          type="button"
+          class="tool-btn discard-btn"
+          id="discard-btn"
+          title="Discard draft"
+        >
+          <Icon name="trash-2" aria-hidden="true" width="14" height="14" />
+        </button>
+        <button type="submit" class="submit-btn">Post</button>
+      </div>
+    </div>
+
+    <div class="composer-error" id="composer-error" hidden></div>
+  </form>
+</div>
+
+<style>
+  .composer {
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+
+  .composer [hidden] {
+    display: none !important;
+  }
+
+  .composer-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .composer-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .type-selector {
+    position: relative;
+  }
+
+  .type-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .type-toggle:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-text-tertiary);
+  }
+
+  .chevron {
+    opacity: 0.5;
+  }
+
+  .type-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 50;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    overflow: hidden;
+    padding: var(--space-1);
+  }
+
+  .type-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .type-option:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+
+  .draft-indicator {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    font-style: italic;
+  }
+
+  .extra-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .verb-fields {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .field-input,
+  .field-select {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field-input:focus,
+  .field-select:focus {
+    border-color: var(--color-text-link);
+  }
+
+  .verb-fields .field-select {
+    width: auto;
+  }
+  .verb-fields .field-input {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .rating {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: var(--space-1);
+    align-items: center;
+  }
+
+  .rating legend {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-right: var(--space-1);
+  }
+
+  .stars {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: var(--space-1);
+  }
+
+  .star {
+    cursor: pointer;
+    font-size: 1.1em;
+    line-height: 1;
+    color: var(--color-text-tertiary);
+    transition: color 0.15s;
+  }
+
+  .star:hover,
+  .star:hover ~ .star {
+    color: var(--color-text-link);
+  }
+
+  .star:has(input:checked),
+  .star:has(input:checked) ~ .star {
+    color: var(--color-text-link);
+  }
+
+  .star input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .editor-wrap {
+    position: relative;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+    min-height: 80px;
+    transition: border-color 0.15s;
+  }
+
+  .editor-wrap:empty {
+    min-height: 159px;
+  }
+
+  .editor-wrap:focus-within {
+    border-color: var(--color-text-link);
+  }
+
+  .attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .attachments :global(.composer__attachment-item) {
+    position: relative;
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  @media (min-width: 480px) {
+    .attachments :global(.composer__attachment-item) {
+      width: 6rem;
+      height: 6rem;
+    }
+  }
+
+  .attachments :global(.composer__attachment-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .attachments :global(.composer__attachment-remove) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .attachments :global(.composer__attachment-loading) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    text-align: center;
+  }
+
+  .composer-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .tool-btn:hover {
+    color: var(--color-text-secondary);
+    border-color: var(--color-text-tertiary);
+  }
+
+  .visibility-select {
+    width: auto;
+  }
+
+  .tag-input {
+    flex: 1;
+    min-width: 80px;
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .tag-input:focus {
+    border-color: var(--color-text-link);
+  }
+
+  .footer-right {
+    margin-left: auto;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .discard-btn {
+    border-color: transparent;
+  }
+
+  .discard-btn:hover {
+    color: var(--color-error, #b91c1c);
+    border-color: transparent;
+  }
+
+  .submit-btn {
+    padding: var(--space-2) var(--space-5);
+    background-color: var(--color-text-link);
+    color: var(--color-text-on-brand);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .submit-btn:hover {
+    opacity: 0.9;
+  }
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .composer-error {
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-error-bg, #fee2e2);
+    color: var(--color-error, #b91c1c);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+  }
+</style>
+
+<script>
+  import { createNoteEditor } from "@indiepub/admin/composer";
+  import "@indiepub/admin/composer/styles.css";
+
+  const composer = document.getElementById("note-composer");
+  if (composer) {
+    const editorMount = document.getElementById("editor-mount") as HTMLElement;
+    const contentInput = document.getElementById(
+      "composer-content",
+    ) as HTMLInputElement;
+    const form = composer.querySelector(".composer-form") as HTMLFormElement;
+    const typeInput = document.getElementById(
+      "composer-type",
+    ) as HTMLInputElement;
+    const attachBtn = document.getElementById(
+      "attach-btn",
+    ) as HTMLButtonElement;
+    const fileInput = document.getElementById("file-input") as HTMLInputElement;
+    const attachmentPreviews = document.getElementById(
+      "attachment-previews",
+    ) as HTMLDivElement;
+    const draftIndicator = document.getElementById(
+      "draft-indicator",
+    ) as HTMLSpanElement | null;
+    const discardBtn = document.getElementById(
+      "discard-btn",
+    ) as HTMLButtonElement;
+    const errorEl = document.getElementById("composer-error") as HTMLDivElement;
+    const submitBtn = form.querySelector(".submit-btn") as HTMLButtonElement;
+
+    const DRAFT_KEY = "indiepub_draft";
+    let draftContent: string | Record<string, unknown> = "";
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) draftContent = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      /* ignore */
+    }
+
+    const editor = createNoteEditor({
+      element: editorMount,
+      content: draftContent,
+    });
+
+    if (draftContent) showDraftIndicator();
+
+    let saveTimer: ReturnType<typeof setTimeout> | null = null;
+    editor.tiptap.on("update", () => {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try {
+          if (!editor.isEmpty()) {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(editor.getJSON()));
+            showDraftIndicator();
+          } else {
+            localStorage.removeItem(DRAFT_KEY);
+            hideDraftIndicator();
+          }
+        } catch {
+          /* ignore */
+        }
+      }, 600);
+    });
+
+    function showDraftIndicator() {
+      if (draftIndicator) draftIndicator.hidden = false;
+    }
+    function hideDraftIndicator() {
+      if (draftIndicator) draftIndicator.hidden = true;
+    }
+
+    discardBtn?.addEventListener("click", () => {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
+      editor.clear();
+      attachmentPreviews.innerHTML = "";
+      hideDraftIndicator();
+    });
+
+    const typeToggle = document.getElementById("type-toggle");
+    const typeDropdown = document.getElementById(
+      "type-dropdown",
+    ) as HTMLDivElement | null;
+
+    if (typeToggle && typeDropdown) {
+      typeToggle.addEventListener("click", () => {
+        const expanded = typeToggle.getAttribute("aria-expanded") === "true";
+        typeToggle.setAttribute("aria-expanded", String(!expanded));
+        typeDropdown.hidden = expanded;
+      });
+
+      document.addEventListener("click", (e) => {
+        if (
+          !typeDropdown.contains(e.target as Node) &&
+          !typeToggle.contains(e.target as Node)
+        ) {
+          typeToggle.setAttribute("aria-expanded", "false");
+          typeDropdown.hidden = true;
+        }
+      });
+
+      typeDropdown.querySelectorAll(".type-option").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const value = (btn as HTMLElement).dataset.value ?? "note";
+          const label = (btn as HTMLElement).dataset.label ?? "";
+          const extra = (btn as HTMLElement).dataset.extra ?? "none";
+
+          typeInput.value = value;
+
+          const labelEl = document.getElementById("type-label");
+          if (labelEl) labelEl.textContent = label;
+
+          document.querySelectorAll(".extra-field").forEach((el) => {
+            (el as HTMLElement).hidden = true;
+            el.querySelectorAll("input, select").forEach((inp) => {
+              (inp as HTMLInputElement).value = "";
+            });
+          });
+
+          if (extra !== "none") {
+            const extraEl = document.getElementById(`extra-${extra}`);
+            if (extraEl) extraEl.hidden = false;
+          }
+
+          typeToggle.setAttribute("aria-expanded", "false");
+          typeDropdown.hidden = true;
+        });
+      });
+    }
+
+    attachBtn?.addEventListener("click", () => fileInput.click());
+    fileInput?.addEventListener("change", () => {
+      const files = Array.from(fileInput.files ?? []);
+      fileInput.value = "";
+      files.forEach(uploadAttachment);
+    });
+
+    function uploadAttachment(file: File) {
+      const placeholder = document.createElement("div");
+      placeholder.className = "composer__attachment-item";
+      placeholder.innerHTML =
+        '<div class="composer__attachment-loading">uploading\u2026</div>';
+      attachmentPreviews.appendChild(placeholder);
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      fetch("/admin/upload", { method: "POST", body: fd })
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Upload failed");
+          const { url } = (await res.json()) as { url: string };
+          placeholder.innerHTML = `
+            <img src="${url}" alt="" class="composer__attachment-img" />
+            <button type="button" class="composer__attachment-remove" aria-label="Remove">\u00d7</button>
+            <input type="hidden" name="photos" value="${url}" />
+          `;
+          placeholder
+            .querySelector(".composer__attachment-remove")
+            ?.addEventListener("click", () => {
+              placeholder.remove();
+            });
+        })
+        .catch(() => {
+          placeholder.innerHTML =
+            '<div class="composer__attachment-loading" style="color:var(--color-error, red)">Failed</div>';
+        });
+    }
+
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (saveTimer) clearTimeout(saveTimer);
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
+      hideDraftIndicator();
+
+      contentInput.value = editor.getMarkdown();
+      submitBtn.disabled = true;
+      errorEl.hidden = true;
+
+      const body = new FormData(form);
+
+      try {
+        const res = await fetch("/admin/compose", {
+          method: "POST",
+          body,
+          redirect: "follow",
+        });
+        if (res.ok || res.redirected) {
+          window.location.href = res.url;
+          return;
+        }
+        const json = (await res
+          .json()
+          .catch(() => ({ error: "Post failed" }))) as { error?: string };
+        showError(json.error ?? "Post failed");
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(editor.getJSON()));
+          showDraftIndicator();
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        showError("Network error \u2014 please try again");
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(editor.getJSON()));
+          showDraftIndicator();
+        } catch {
+          /* ignore */
+        }
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    function showError(msg: string) {
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+  }
+</script>

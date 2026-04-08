@@ -1,0 +1,37 @@
+---
+interface Props {
+  rating: number;
+  /** Font size token — defaults to 'lg' for feed cards, 'xl' for detail views */
+  size?: 'lg' | 'xl';
+}
+
+const { rating, size = 'lg' } = Astro.props;
+---
+
+<span class={`stars--${size}`} aria-label={`Rating: ${rating} out of 5`}>
+  {[1,2,3,4,5].map(n => (
+    <span data-filled={n <= rating ? '' : undefined} aria-hidden="true">{n <= rating ? '★' : '☆'}</span>
+  ))}
+</span>
+
+<style>
+  .stars--lg {
+    display: flex;
+    gap: 0.125rem;
+    font-size: var(--text-lg);
+  }
+
+  .stars--xl {
+    display: flex;
+    gap: 0.125rem;
+    font-size: var(--text-xl);
+  }
+
+  span span {
+    color: var(--color-border);
+  }
+
+  span span[data-filled] {
+    color: var(--color-text-link);
+  }
+</style>

@@ -1,0 +1,56 @@
+---
+import Feed from '../../layouts/Feed.astro';
+import FeedCard from '../../components/FeedCard.astro';
+import { setCollectionCacheHeaders } from '../../lib/cache';
+
+if (!Astro.locals.indiepub) {
+  return new Response('Service unavailable', { status: 503 });
+}
+
+const { content } = Astro.locals.indiepub;
+const memberTier = Astro.locals.member?.tier ?? null;
+const entries = await content.getEntries('photo', { memberTier, limit: 50 });
+const countsMap = await content.getBatchInteractionCounts(entries.map(e => e.id));
+
+setCollectionCacheHeaders(Astro.response, !!Astro.locals.isAdmin, entries);
+---
+
+<Feed title="Photos">
+  <div class="page-heading">
+    <h1>Photos</h1>
+    <p class="text-secondary text-sm">A visual stream.</p>
+  </div>
+
+  <div class="h-feed feed-list" aria-label="Photos feed">
+    {entries.length > 0 ? (
+      entries.map(entry => <FeedCard entry={entry} counts={countsMap.get(entry.id)} />)
+    ) : (
+      <p class="empty-state text-secondary">No photos yet.</p>
+    )}
+  </div>
+</Feed>
+
+<style>
+  .page-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-6);
+  }
+
+  .page-heading h1 {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+  }
+
+  .feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .empty-state {
+    padding: var(--space-8) 0;
+    text-align: center;
+  }
+</style>

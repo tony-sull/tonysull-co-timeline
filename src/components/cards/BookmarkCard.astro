@@ -1,0 +1,132 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Entry, InteractionCounts } from '@indiepub/types';
+import CardFooter from '../CardFooter.astro';
+import { hostname } from '../../lib/format.ts';
+
+interface Props {
+  entry: Entry;
+  counts?: InteractionCounts | undefined;
+  detailUrl: string;
+  pubDate: Date;
+  badgeLabel?: string | undefined;
+}
+
+const { entry, counts, detailUrl, pubDate, badgeLabel } = Astro.props;
+---
+
+<div>
+  <header>
+    {badgeLabel && <span class="type-badge">{badgeLabel}</span>}
+    {(entry.visibility === 'members' || entry.visibility === 'paid') && (
+      <span class="visibility-badge">
+        <Icon name="lock" aria-hidden="true" />
+        {entry.visibility === 'paid' ? 'Paid' : 'Members'}
+      </span>
+    )}
+    <span class="bookmark-domain text-sm text-secondary">
+      <Icon name="bookmark" aria-hidden="true" />
+      {hostname(entry.bookmarkOf!)}
+    </span>
+  </header>
+  <h2 class="p-name">
+    <a href={entry.bookmarkOf!} class="u-bookmark-of" rel="noopener" target="_blank">
+      {entry.name ?? entry.bookmarkOf}
+      <Icon name="external-link" aria-hidden="true" />
+    </a>
+  </h2>
+  {entry.summary && (
+    <p class="p-summary">{entry.summary}</p>
+  )}
+  <CardFooter detailUrl={detailUrl} pubDate={pubDate} counts={counts} syndicationUrls={entry.syndicationUrls} />
+</div>
+
+<style>
+  div {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .type-badge {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-link);
+    background-color: var(--color-brand-muted);
+    padding: 0.15em 0.5em;
+    border-radius: var(--radius-full);
+  }
+
+  .visibility-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-warning, #b58a00);
+    background-color: color-mix(in oklch, var(--color-warning, #b58a00) 12%, transparent);
+    padding: 0.15em 0.5em;
+    border-radius: var(--radius-full);
+  }
+
+  .visibility-badge :global(svg) {
+    width: 0.7em;
+    height: 0.7em;
+  }
+
+  .bookmark-domain {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .bookmark-domain :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  h2 {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+  }
+
+  h2 a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+
+  h2 a:hover {
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  h2 :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+  }
+
+  p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+</style>

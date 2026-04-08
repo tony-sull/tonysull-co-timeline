@@ -1,0 +1,188 @@
+---
+import type { Author, IndiePubConfig, Entry } from '@indiepub/types';
+import ThemeToggle from './ThemeToggle.astro';
+import SideProfileSubscribe from './SideProfileSubscribe.astro';
+import SideProfileNow from './SideProfileNow.astro';
+import SideProfileTagCloud from './SideProfileTagCloud.astro';
+import SideProfileSocial from './SideProfileSocial.astro';
+
+interface Props {
+  author: Author;
+  config: IndiePubConfig;
+  activePath: string;
+  topTags?: Array<{ name: string; slug: string; count: number }> | undefined;
+  nowEntry?: Entry | null | undefined;
+  /** True when rendered inside the mobile overlay */
+  mobile?: boolean | undefined;
+}
+
+const { author, config, activePath, topTags = [], nowEntry = null, mobile = false } = Astro.props;
+
+const navLinks = [
+  { href: '/',           label: 'All posts' },
+  { href: '/now',        label: 'Now' },
+  { href: '/notes',      label: 'Notes' },
+  { href: '/articles',   label: 'Articles' },
+  { href: '/photos',     label: 'Photos' },
+  { href: '/bookmarks',  label: 'Bookmarks' },
+];
+
+function isActive(href: string): boolean {
+  if (href === '/') return activePath === '/';
+  return activePath === href || activePath.startsWith(href + '/');
+}
+
+const socialLinks = author.socialLinks ?? [];
+const authorDomain = author.url ? new URL(author.url).hostname.replace(/^www\./, '') : undefined;
+---
+
+<div class:list={['side-profile', 'h-card', { 'side-profile--mobile': mobile }]}>
+  <!-- Avatar -->
+  {author.photo && (
+    <a href="/about" class="avatar-link">
+      <img
+        class="u-photo"
+        src={author.photo}
+        alt={author.name}
+        width="72"
+        height="72"
+      />
+    </a>
+  )}
+
+  <!-- Identity -->
+  <div class="identity">
+    <a href="/about" class="p-name identity__name" rel="me">{author.name}</a>
+    {authorDomain && (
+      <span class="text-sm text-secondary">{authorDomain}</span>
+    )}
+    {author.bio && (
+      <p class="p-note identity__bio text-sm">{author.bio}</p>
+    )}
+  </div>
+
+  <hr />
+
+  <!-- Navigation -->
+  <nav aria-label="Site navigation">
+    {navLinks.map(link => (
+      <a
+        href={link.href}
+        aria-current={isActive(link.href) ? 'page' : undefined}
+      >
+        {link.label}
+      </a>
+    ))}
+  </nav>
+
+  <hr />
+
+  <SideProfileSubscribe config={config} />
+  <SideProfileNow entry={nowEntry} />
+  <SideProfileTagCloud tags={topTags} activePath={activePath} />
+  <SideProfileSocial links={socialLinks} />
+
+  <!-- Theme toggle -->
+  <div class="theme-wrap">
+    <ThemeToggle />
+  </div>
+</div>
+
+<style>
+  .side-profile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  /* Avatar */
+  .avatar-link {
+    display: block;
+    width: 4.5rem;
+    text-decoration: none;
+  }
+
+  .avatar-link img {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+  }
+
+  /* Identity */
+  .identity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .identity__name {
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    line-height: var(--leading-snug);
+  }
+
+  .identity__name:hover {
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  .identity__bio {
+    color: var(--color-text-secondary);
+    line-height: var(--leading-normal);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Divider */
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 0;
+  }
+
+  /* Navigation */
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  nav a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition), background-color var(--transition);
+  }
+
+  nav a:hover {
+    color: var(--color-text-primary);
+    background-color: var(--color-surface-2);
+    text-decoration: none;
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--color-text-link);
+    background-color: var(--color-brand-muted);
+  }
+
+  nav a[aria-current="page"]:hover {
+    color: var(--color-text-link-hover);
+    background-color: var(--color-brand-muted);
+  }
+
+  /* Theme toggle */
+  .theme-wrap {
+    margin-top: auto;
+    padding-top: var(--space-2);
+    align-self: flex-start;
+  }
+</style>

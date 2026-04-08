@@ -1,0 +1,119 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  icon: string;
+  label: string;
+  items: Array<{
+    authorName?: string | undefined;
+    authorUrl?: string | undefined;
+    authorPhoto?: string | undefined;
+    sourceUrl: string;
+    sourceLabel: string;
+  }>;
+}
+
+const { icon, label, items } = Astro.props;
+---
+
+<div aria-label={label}>
+  <p class="text-sm text-secondary">
+    <Icon name={icon} aria-hidden="true" />
+    {label}
+  </p>
+  <div class="avatars">
+    {items.slice(0, 12).map(r => (
+      r.authorPhoto ? (
+        <a href={r.authorUrl ?? r.sourceUrl} rel="noopener" target="_blank" title={r.authorName ?? undefined}>
+          <img
+            src={r.authorPhoto}
+            alt={r.authorName ?? ''}
+            width="32"
+            height="32"
+          />
+        </a>
+      ) : (
+        <a href={r.authorUrl ?? r.sourceUrl} rel="noopener" target="_blank" title={r.authorName ?? undefined}
+           class="placeholder"
+           aria-label={r.authorName ?? r.sourceLabel}
+        >
+          <Icon name="user" aria-hidden="true" />
+        </a>
+      )
+    ))}
+    {items.length > 12 && (
+      <span class="overflow">+{items.length - 12}</span>
+    )}
+  </div>
+</div>
+
+<style>
+  div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  p :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  .avatars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    align-items: center;
+  }
+
+  .avatars img,
+  .avatars .placeholder {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 2px solid var(--color-bg);
+    margin-left: -0.375rem;
+    transition: transform var(--transition);
+    text-decoration: none;
+  }
+
+  .avatars a:first-child img,
+  .avatars a:first-child.placeholder {
+    margin-left: 0;
+  }
+
+  .avatars img:hover,
+  .avatars .placeholder:hover {
+    transform: translateY(-2px);
+    z-index: 1;
+    position: relative;
+  }
+
+  .placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-2);
+    color: var(--color-text-tertiary);
+  }
+
+  .placeholder :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .overflow {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    margin-left: var(--space-2);
+  }
+</style>

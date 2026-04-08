@@ -1,0 +1,82 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { IndiePubConfig } from '@indiepub/types';
+import SubscribeForm from './SubscribeForm.astro';
+
+interface Props {
+  config: IndiePubConfig;
+}
+
+const { config } = Astro.props;
+---
+
+<div>
+  <p class="text-xs text-secondary">Subscribe</p>
+  <ul class="feed-links">
+    <li><a href="/feed.xml" title="RSS feed">
+      <Icon name="rss" aria-hidden="true" />
+      <span>RSS</span>
+    </a></li>
+    <li><a href="/feed.atom" title="Atom feed">
+      <Icon name="rss" aria-hidden="true" />
+      <span>Atom</span>
+    </a></li>
+    <li><a href="/feed.json" title="JSON Feed">
+      <Icon name="rss" aria-hidden="true" />
+      <span>JSON</span>
+    </a></li>
+  </ul>
+  {config.subscriptions?.enabled && (
+    <SubscribeForm />
+  )}
+</div>
+
+<style>
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  p {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--weight-semibold);
+  }
+
+  .feed-links {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feed-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    padding: 0.2rem var(--space-2);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-2);
+    transition: color var(--transition), background-color var(--transition);
+  }
+
+  .feed-links a:hover {
+    color: var(--color-text-link);
+    background-color: var(--color-brand-muted);
+    text-decoration: none;
+  }
+
+  .feed-links :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+</style>

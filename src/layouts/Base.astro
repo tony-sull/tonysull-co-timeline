@@ -1,0 +1,68 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+  canonicalUrl?: string | undefined;
+  ogImage?: string | undefined;
+}
+
+const config = Astro.locals.indiepub?.config;
+const siteTitle = config?.title ?? 'My IndieWeb Site';
+const { title, description, canonicalUrl, ogImage } = Astro.props;
+
+const pageTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+const pageDescription = description ?? config?.description ?? '';
+const canonical = canonicalUrl ?? new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+---
+
+<!doctype html>
+<html lang={config?.language ?? 'en'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    {pageDescription && <meta name="description" content={pageDescription} />}
+    <link rel="canonical" href={canonical} />
+    {Astro.locals.indiepub?.faviconUrl && (
+      <link rel="icon" href={Astro.locals.indiepub.faviconUrl} />
+    )}
+
+    <!-- Open Graph -->
+    <meta property="og:title"       content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url"         content={canonical} />
+    <meta property="og:type"        content="website" />
+    {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url.origin).href} />}
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card"        content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title"       content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    {ogImage && <meta name="twitter:image" content={new URL(ogImage, Astro.site ?? Astro.url.origin).href} />}
+
+    <!-- IndieWeb endpoint discovery -->
+    <link rel="micropub" href="/micropub" />
+    <link rel="webmention" href="/.well-known/webmention" />
+
+    <!-- Feed discovery -->
+    <link rel="alternate" type="application/rss+xml" title={`${siteTitle} (RSS)`} href="/feed.xml" />
+    <link rel="alternate" type="application/atom+xml" title={`${siteTitle} (Atom)`} href="/feed.atom" />
+    <link rel="alternate" type="application/feed+json" title={`${siteTitle} (JSON Feed)`} href="/feed.json" />
+
+    <!-- Prevent flash of wrong theme — must run synchronously before paint -->
+    <script is:inline>
+      (function () {
+        var t = localStorage.getItem('theme') ?? 'auto';
+        var dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+      })();
+    </script>
+
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

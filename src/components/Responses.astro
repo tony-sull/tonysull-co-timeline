@@ -1,0 +1,69 @@
+---
+import InteractionPile from './InteractionPile.astro';
+import ReplyList from './ReplyList.astro';
+
+interface ResponseItem {
+  type: 'like' | 'repost' | 'comment';
+  authorName?: string | undefined;
+  authorUrl?: string | undefined;
+  authorPhoto?: string | undefined;
+  content?: string | undefined;
+  sourceUrl: string;
+  sourceLabel: string;
+}
+
+interface Props {
+  responses: ResponseItem[];
+}
+
+const { responses } = Astro.props;
+const likes = responses.filter(r => r.type === 'like');
+const reposts = responses.filter(r => r.type === 'repost');
+const replies = responses.filter(r => r.type === 'comment');
+---
+
+<section aria-labelledby="responses-heading">
+  <h2 id="responses-heading">
+    Responses <span>({responses.length})</span>
+  </h2>
+
+  {likes.length > 0 && (
+    <InteractionPile
+      icon="heart"
+      label={`${likes.length} ${likes.length === 1 ? 'like' : 'likes'}`}
+      items={likes}
+    />
+  )}
+
+  {reposts.length > 0 && (
+    <InteractionPile
+      icon="repeat-2"
+      label={`${reposts.length} ${reposts.length === 1 ? 'repost' : 'reposts'}`}
+      items={reposts}
+    />
+  )}
+
+  {replies.length > 0 && (
+    <ReplyList replies={replies} />
+  )}
+</section>
+
+<style>
+  section {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+  }
+
+  h2 span {
+    font-weight: var(--weight-normal);
+    color: var(--color-text-secondary);
+  }
+</style>

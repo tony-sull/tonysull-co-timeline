@@ -1,0 +1,58 @@
+---
+import type { SocialLink } from '@indiepub/types';
+import SocialIcon from './SocialIcon.astro';
+
+interface Props {
+  links: SocialLink[];
+}
+
+const { links } = Astro.props;
+---
+
+{links.length > 0 && (
+  <div aria-label="Social profiles">
+    {links.map(link => (
+      <a
+        href={link.url}
+        class="u-url"
+        rel="me noopener"
+        target="_blank"
+        aria-label={link.label}
+      >
+        <SocialIcon icon={link.icon} aria-hidden="true" />
+      </a>
+    ))}
+  </div>
+)}
+
+<style>
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition), background-color var(--transition);
+  }
+
+  a:hover {
+    color: var(--color-text-primary);
+    background-color: var(--color-surface-2);
+    text-decoration: none;
+  }
+
+  a :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+</style>

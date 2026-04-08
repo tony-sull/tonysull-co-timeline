@@ -1,0 +1,29 @@
+{
+  "name": "@indiepub/theme-timeline",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "npx @astrojs/check",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^13.0.0",
+    "@indiepub/admin": "1.0.0-beta.24",
+    "@indiepub/astro": "1.0.0-beta.23",
+    "astro-icon": "^1.1.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@indiepub/db": "1.0.0-beta.2",
+    "@indiepub/types": "1.0.0-beta.2",
+    "astro": "^6.0.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.73.0"
+  }
+}

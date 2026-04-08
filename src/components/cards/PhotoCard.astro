@@ -1,0 +1,70 @@
+---
+import type { Entry, InteractionCounts } from '@indiepub/types';
+import PhotoCarousel from '@indiepub/astro/components/PhotoCarousel.astro';
+import CardFooter from '../CardFooter.astro';
+
+interface Props {
+  entry: Entry;
+  counts?: InteractionCounts | undefined;
+  detailUrl: string;
+  pubDate: Date;
+  badgeLabel?: string | undefined;
+}
+
+const { entry, counts, detailUrl, pubDate, badgeLabel } = Astro.props;
+---
+
+<div>
+  <PhotoCarousel
+    attachments={entry.attachments!}
+    fallbackAlt={entry.summary ?? entry.name ?? ''}
+    sizes="(min-width: 768px) 600px, 100vw"
+    class="photo-media"
+  />
+  <div>
+    {(entry.summary || entry.content) && (
+      <p class="p-summary">
+        {entry.summary ?? entry.content?.replace(/<[^>]*>/g, '').slice(0, 140)}
+      </p>
+    )}
+    <CardFooter detailUrl={detailUrl} pubDate={pubDate} counts={counts} syndicationUrls={entry.syndicationUrls}>
+      {badgeLabel && <span slot="after-time" class="type-badge">{badgeLabel}</span>}
+    </CardFooter>
+  </div>
+</div>
+
+<style>
+  div:first-child {
+    display: flex;
+    flex-direction: column;
+  }
+
+  div:first-child > div {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .type-badge {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-link);
+    background-color: var(--color-brand-muted);
+    padding: 0.15em 0.5em;
+    border-radius: var(--radius-full);
+  }
+</style>

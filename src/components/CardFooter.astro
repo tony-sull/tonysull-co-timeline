@@ -1,0 +1,137 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { InteractionCounts } from '@indiepub/types';
+import { formatDateCompact, isoDate, hostname } from '../lib/format.ts';
+
+interface Props {
+  detailUrl: string;
+  pubDate: Date;
+  counts?: InteractionCounts | undefined;
+  syndicationUrls?: string[] | undefined;
+}
+
+const { detailUrl, pubDate, counts, syndicationUrls } = Astro.props;
+const hasInteractions = counts && (counts.likes > 0 || counts.reposts > 0 || counts.comments > 0);
+
+function syndicationMeta(url: string): { icon: string; label: string } {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    const path = parsed.pathname;
+    if (host === 'bsky.app' || host.endsWith('.bsky.app')) {
+      return { icon: 'social/bluesky', label: 'Bluesky' };
+    }
+    if (host === 'twitter.com' || host === 'x.com') {
+      return { icon: 'social/x', label: 'X' };
+    }
+    if (/\/@[^/]+\/\d+/.test(path)) {
+      return { icon: 'social/mastodon', label: 'Mastodon' };
+    }
+  } catch {
+    // ignore malformed URLs
+  }
+  return { icon: 'external-link', label: hostname(url) };
+}
+---
+
+<footer>
+  <a href={detailUrl} class="u-url">
+    <time class="dt-published" datetime={isoDate(pubDate)}>
+      {formatDateCompact(pubDate)}
+    </time>
+  </a>
+  <slot name="after-time" />
+  {hasInteractions && (
+    <span class="counts">
+      {counts!.likes > 0 && <span><Icon name="heart" aria-hidden="true" />{counts!.likes}</span>}
+      {counts!.reposts > 0 && <span><Icon name="repeat-2" aria-hidden="true" />{counts!.reposts}</span>}
+      {counts!.comments > 0 && <span><Icon name="message-square" aria-hidden="true" />{counts!.comments}</span>}
+    </span>
+  )}
+  <span class="actions">
+    {syndicationUrls && syndicationUrls.map((url: string) => {
+      const { icon, label } = syndicationMeta(url);
+      return (
+        <a
+          href={url}
+          class="u-syndication"
+          rel="syndication noopener"
+          target="_blank"
+          aria-label={`${label} (syndicated copy)`}
+        >
+          <Icon name={icon} aria-hidden="true" />
+        </a>
+      );
+    })}
+    <slot name="actions" />
+  </span>
+</footer>
+
+<style>
+  footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  footer > a {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  footer > a:hover {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+
+  .counts {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .counts > span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  .counts > span :global(svg) {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  [rel~="syndication"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  [rel~="syndication"]:hover {
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  [rel~="syndication"] :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

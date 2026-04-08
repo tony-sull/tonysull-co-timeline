@@ -1,0 +1,437 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Entry, Interaction, InteractionCounts, WebMention } from '@indiepub/types';
+import Markdown from '@indiepub/astro/components/Markdown.astro';
+import PhotoCarousel from '@indiepub/astro/components/PhotoCarousel.astro';
+import TagList from './TagList.astro';
+import StarRating from './StarRating.astro';
+import VerbCallout from './VerbCallout.astro';
+import PaywallCTA from './PaywallCTA.astro';
+import Responses from './Responses.astro';
+import { formatDate, isoDate, hostname } from '../lib/format.ts';
+
+interface Props {
+  entry: Entry;
+  webmentions: WebMention[];
+  interactions: Interaction[];
+  counts: InteractionCounts;
+  isPaidLocked?: boolean;
+}
+
+const { entry, webmentions, interactions, counts, isPaidLocked = false } = Astro.props;
+const pubDate = entry.publishedAt ?? entry.createdAt;
+const detailUrl = `/posts/${entry.slug}`;
+
+// Merge interactions + webmentions into a common shape for display
+type ResponseItem = {
+  type: 'like' | 'repost' | 'comment';
+  authorName?: string | undefined;
+  authorUrl?: string | undefined;
+  authorPhoto?: string | undefined;
+  content?: string | undefined;
+  sourceUrl: string;
+  sourceLabel: string;
+};
+
+const allResponses: ResponseItem[] = [];
+
+for (const ix of interactions) {
+  if (ix.type !== 'like' && ix.type !== 'repost' && ix.type !== 'comment') continue;
+  allResponses.push({
+    type: ix.type,
+    authorName: ix.authorName,
+    authorUrl: ix.authorUrl,
+    authorPhoto: ix.authorPhoto,
+    content: ix.content,
+    sourceUrl: ix.externalUrl ?? ix.authorUrl ?? '#',
+    sourceLabel: ix.source === 'bluesky' ? 'Bluesky' : ix.source === 'mastodon' ? 'Mastodon' : ix.source,
+  });
+}
+
+for (const wm of webmentions) {
+  const wmType = wm.type === 'reply' || wm.type === 'mention' ? 'comment' : wm.type === 'like' ? 'like' : wm.type === 'repost' ? 'repost' : null;
+  if (!wmType) continue;
+  allResponses.push({
+    type: wmType,
+    authorName: wm.authorName,
+    authorUrl: wm.authorUrl,
+    authorPhoto: wm.authorPhoto,
+    content: wm.content,
+    sourceUrl: wm.source,
+    sourceLabel: hostname(wm.source),
+  });
+}
+
+const isArticle = entry.type === 'article';
+
+const backHref =
+  entry.type === 'note'     ? '/notes'     :
+  entry.type === 'article'  ? '/articles'  :
+  entry.type === 'photo'    ? '/photos'    :
+  entry.type === 'bookmark' ? '/bookmarks' : '/';
+const backLabel =
+  entry.type === 'note'     ? 'Notes'     :
+  entry.type === 'article'  ? 'Articles'  :
+  entry.type === 'photo'    ? 'Photos'    :
+  entry.type === 'bookmark' ? 'Bookmarks' : 'Feed';
+---
+
+<article class="h-entry">
+  <nav>
+    <a href={backHref}>← {backLabel}</a>
+  </nav>
+
+  {/* ── Article prose layout ────────────────────────────── */}
+  {isArticle && (
+    <div class="article-layout">
+      {entry.name && (
+        <h1 class="p-name">{entry.name}</h1>
+      )}
+      <div class="byline">
+        <a href={detailUrl} class="u-url permalink">
+          <time class="dt-published" datetime={isoDate(pubDate)}>
+            {formatDate(pubDate)}
+          </time>
+        </a>
+        {entry.updatedAt && entry.updatedAt > pubDate && (
+          <span class="text-sm text-secondary">
+            Updated <time class="dt-updated" datetime={isoDate(entry.updatedAt)}>
+              {formatDate(entry.updatedAt)}
+            </time>
+          </span>
+        )}
+      </div>
+      {entry.summary && (
+        <p class="p-summary lead">{entry.summary}</p>
+      )}
+      {isPaidLocked ? (
+        <PaywallCTA />
+      ) : entry.content && (
+        <Markdown content={entry.content} variant="article" class="e-content" />
+      )}
+    </div>
+  )}
+
+  {/* ── Non-article: enlarged card layout ───────────────── */}
+  {!isArticle && (
+    <div class="card-layout">
+      {entry.verb && entry.objectName && (
+        <VerbCallout verb={entry.verb} objectName={entry.objectName} objectUrl={entry.objectUrl} size="large" />
+      )}
+      {entry.rating != null && entry.rating > 0 && (
+        <StarRating rating={entry.rating} size="xl" />
+      )}
+
+      {entry.inReplyTo && (
+        <p class="reply-to">
+          <Icon name="corner-down-right" aria-hidden="true" />
+          <span class="text-secondary text-sm">in reply to </span>
+          <a href={entry.inReplyTo} class="u-in-reply-to" rel="noopener" target="_blank">
+            {hostname(entry.inReplyTo)}
+          </a>
+        </p>
+      )}
+
+      {(entry.attachments && entry.attachments.length > 0) ? (
+        <PhotoCarousel
+          attachments={entry.attachments}
+          fallbackAlt={entry.summary ?? entry.name ?? ''}
+          sizes="(min-width: 768px) 600px, 100vw"
+          class="card-media"
+        />
+      ) : entry.photo ? (
+        <PhotoCarousel
+          attachments={[{ id: '', url: entry.photo, contentType: 'image/*', displayOrder: 0 }]}
+          fallbackAlt={entry.summary ?? entry.name ?? ''}
+          sizes="(min-width: 768px) 600px, 100vw"
+          class="card-media"
+        />
+      ) : null}
+
+      {entry.name && (
+        <h1 class="p-name card-name">{entry.name}</h1>
+      )}
+
+      {isPaidLocked ? (
+        <PaywallCTA />
+      ) : entry.content && (
+        <Markdown content={entry.content} variant="compact" class="e-content" />
+      )}
+
+      {entry.likeOf && (
+        <blockquote class="interaction-target">
+          <span class="text-secondary text-sm">liked </span>
+          <a href={entry.likeOf} class="u-like-of" rel="noopener" target="_blank">
+            {hostname(entry.likeOf)}
+          </a>
+        </blockquote>
+      )}
+
+      {entry.repostOf && (
+        <blockquote class="interaction-target">
+          <span class="text-secondary text-sm">reposted </span>
+          <a href={entry.repostOf} class="u-repost-of" rel="noopener" target="_blank">
+            {hostname(entry.repostOf)}
+          </a>
+        </blockquote>
+      )}
+
+      {entry.bookmarkOf && (
+        <p class="bookmark-of">
+          <Icon name="bookmark" aria-hidden="true" />
+          <a href={entry.bookmarkOf} class="u-bookmark-of" rel="noopener" target="_blank">
+            {entry.name ?? hostname(entry.bookmarkOf)}
+            <Icon name="external-link" aria-hidden="true" />
+          </a>
+        </p>
+      )}
+
+      <div class="byline">
+        <a href={detailUrl} class="u-url permalink">
+          <time class="dt-published" datetime={isoDate(pubDate)}>
+            {formatDate(pubDate)}
+          </time>
+        </a>
+      </div>
+    </div>
+  )}
+
+  <!-- Tags + syndication + counts footer -->
+  <footer>
+    {entry.tags && entry.tags.length > 0 && (
+      <TagList tags={entry.tags} />
+    )}
+
+    {entry.syndicationUrls && entry.syndicationUrls.length > 0 && (
+      <div class="syndication-list">
+        <p class="syndication-label text-xs text-secondary">Syndicated to</p>
+        <ul>
+          {entry.syndicationUrls.map((url: string) => (
+            <li>
+              <a href={url} class="u-syndication" rel="syndication noopener" target="_blank">
+                <Icon name="external-link" aria-hidden="true" />
+                {hostname(url)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {(counts.likes > 0 || counts.reposts > 0 || counts.comments > 0) && (
+      <div class="interaction-bar">
+        {counts.likes > 0 && (
+          <span>
+            <Icon name="heart" aria-hidden="true" />
+            {counts.likes} {counts.likes === 1 ? 'like' : 'likes'}
+          </span>
+        )}
+        {counts.reposts > 0 && (
+          <span>
+            <Icon name="repeat-2" aria-hidden="true" />
+            {counts.reposts} {counts.reposts === 1 ? 'repost' : 'reposts'}
+          </span>
+        )}
+        {counts.comments > 0 && (
+          <span>
+            <Icon name="message-square" aria-hidden="true" />
+            {counts.comments} {counts.comments === 1 ? 'comment' : 'comments'}
+          </span>
+        )}
+      </div>
+    )}
+  </footer>
+</article>
+
+{allResponses.length > 0 && (
+  <Responses responses={allResponses} />
+)}
+
+<style>
+  /* ── Back nav ───────────────────────────────────────────── */
+  nav {
+    margin-bottom: var(--space-6);
+  }
+
+  nav a {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  nav a:hover {
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  /* ── Article layout ─────────────────────────────────────── */
+  .article-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .article-layout h1 {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+  }
+
+  .byline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .permalink {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+  }
+
+  .permalink:hover {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+
+  .lead {
+    font-size: var(--text-lg);
+    font-style: italic;
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+  }
+
+  /* ── Non-article card layout ────────────────────────────── */
+  .card-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    padding: var(--space-5);
+  }
+
+  .card-name {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .card-media {
+    margin: calc(var(--space-5) * -1);
+    margin-bottom: 0;
+    border-radius: 0;
+    max-height: 480px;
+    object-fit: cover;
+  }
+
+  /* Reply to / interaction targets */
+  .reply-to {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+
+  .reply-to :global(svg) {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .interaction-target {
+    border-left: 3px solid var(--color-border-strong);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background-color: var(--color-surface-2);
+    font-style: normal;
+  }
+
+  .bookmark-of {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  .bookmark-of :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .bookmark-of a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    margin-top: var(--space-2);
+  }
+
+  .syndication-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .syndication-label {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--weight-semibold);
+  }
+
+  .syndication-list ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .syndication-list a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+
+  .syndication-list :global(svg) {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .interaction-bar {
+    display: flex;
+    gap: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  .interaction-bar > span {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .interaction-bar :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

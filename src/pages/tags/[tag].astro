@@ -1,0 +1,57 @@
+---
+import Feed from '../../layouts/Feed.astro';
+import FeedCard from '../../components/FeedCard.astro';
+import { setCollectionCacheHeaders } from '../../lib/cache';
+
+if (!Astro.locals.indiepub) {
+  return new Response('Service unavailable', { status: 503 });
+}
+
+const { tag } = Astro.params;
+if (!tag) return new Response('Not found', { status: 404 });
+
+const decodedTag = decodeURIComponent(tag);
+const memberTier = Astro.locals.member?.tier ?? null;
+const entries = await Astro.locals.indiepub.content.getEntries(undefined, {
+  tag: decodedTag,
+  memberTier,
+  limit: 50,
+});
+
+if (entries.length === 0) return new Response('Not found', { status: 404 });
+
+setCollectionCacheHeaders(Astro.response, false, entries);
+---
+
+<Feed title={`#${decodedTag}`}>
+  <div class="page-heading">
+    <h1>#{decodedTag}</h1>
+    <p class="text-secondary text-sm">
+      {entries.length} {entries.length === 1 ? 'post' : 'posts'}
+    </p>
+  </div>
+
+  <div class="h-feed feed-list" aria-label={`Posts tagged ${decodedTag}`}>
+    {entries.map(entry => <FeedCard entry={entry} />)}
+  </div>
+</Feed>
+
+<style>
+  .page-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-6);
+  }
+
+  .page-heading h1 {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+  }
+
+  .feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+</style>

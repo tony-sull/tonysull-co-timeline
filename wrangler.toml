@@ -1,0 +1,20 @@
+name = "tonysull-co-timeline"
+main = "@astrojs/cloudflare/entrypoints/server"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "dist"
+
+# Set secrets via the CLI, never commit them:
+#   wrangler secret put INDIEPUB_TOKEN
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tonysull-co-timeline-db"
+database_id = "b83bbfb4-6a6a-4540-a3ea-cda42a91ef69"
+migrations_dir = "node_modules/@indiepub/db/migrations"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "tonysull-co-timeline-media"

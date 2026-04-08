@@ -1,0 +1,139 @@
+---
+/**
+ * Embeddable email subscription form.
+ * POSTs to /api/subscribe; handles success/error via ?subscribed= query param on redirect.
+ */
+
+const url = new URL(Astro.request.url);
+const subscribed = url.searchParams.get('subscribed');
+const success = subscribed === '1';
+const duplicate = subscribed === 'dup';
+---
+
+{success ? (
+  <div role="status">
+    <span aria-hidden="true">&#10003;</span>
+    <p>You're subscribed. Thanks!</p>
+  </div>
+) : (
+  <form
+    class="subscribe-form"
+    method="post"
+    action={`/api/subscribe?next=${encodeURIComponent(url.pathname + '?subscribed=1')}`}
+  >
+    {duplicate && (
+      <p class="subscribe-form__note" role="status">You're already subscribed.</p>
+    )}
+
+    <div>
+      <label for="subscribe-name">Name <span>(optional)</span></label>
+      <input
+        type="text"
+        id="subscribe-name"
+        name="name"
+        placeholder="Your name"
+        autocomplete="name"
+      />
+    </div>
+
+    <div>
+      <label for="subscribe-email">Email address</label>
+      <input
+        type="email"
+        id="subscribe-email"
+        name="email"
+        placeholder="you@example.com"
+        autocomplete="email"
+        required
+      />
+    </div>
+
+    <button type="submit">
+      Subscribe
+    </button>
+  </form>
+)}
+
+<style>
+  div[role="status"] {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: color-mix(in oklch, var(--color-success) 12%, transparent);
+    border: 1px solid color-mix(in oklch, var(--color-success) 30%, transparent);
+    border-radius: var(--radius-lg);
+    color: var(--color-success);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+
+  div[role="status"] > span {
+    font-size: var(--text-base);
+  }
+
+  .subscribe-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .subscribe-form > div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .subscribe-form__note {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  label span {
+    color: var(--color-text-tertiary);
+    font-weight: var(--weight-normal);
+  }
+
+  input[type="text"],
+  input[type="email"] {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-family: inherit;
+    color: var(--color-text-primary);
+    transition: border-color var(--transition);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--color-brand);
+  }
+
+  button {
+    align-self: flex-start;
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-5);
+    background: var(--color-brand);
+    color: var(--color-text-on-brand);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+
+  button:hover {
+    background: var(--color-text-link-hover);
+  }
+</style>

@@ -1,0 +1,76 @@
+---
+import type { Entry } from '@indiepub/types';
+import { formatDate } from '../lib/format.ts';
+
+interface Props {
+  entry: Entry | null;
+}
+
+const { entry } = Astro.props;
+if (!entry) return;
+
+const snippet = entry.content?.replace(/<[^>]*>/g, '').slice(0, 140) ?? '';
+---
+
+<section>
+  <header>
+    <strong>Now</strong>
+    <time datetime={entry.publishedAt?.toISOString() ?? entry.createdAt.toISOString()}>
+      {formatDate(entry.publishedAt ?? entry.createdAt)}
+    </time>
+  </header>
+  {snippet && <p>{snippet}</p>}
+  <a href="/now">View /now &rarr;</a>
+</section>
+
+<style>
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background-color: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-text-link);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  strong {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-link);
+  }
+
+  time {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  a {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-link);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
