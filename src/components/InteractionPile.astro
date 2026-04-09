@@ -1,5 +1,5 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Icon } from "astro-icon/components";
 
 interface Props {
   icon: string;
@@ -22,28 +22,37 @@ const { icon, label, items } = Astro.props;
     {label}
   </p>
   <div class="avatars">
-    {items.slice(0, 12).map(r => (
-      r.authorPhoto ? (
-        <a href={r.authorUrl ?? r.sourceUrl} rel="noopener" target="_blank" title={r.authorName ?? undefined}>
-          <img
-            src={r.authorPhoto}
-            alt={r.authorName ?? ''}
-            width="32"
-            height="32"
-          />
-        </a>
-      ) : (
-        <a href={r.authorUrl ?? r.sourceUrl} rel="noopener" target="_blank" title={r.authorName ?? undefined}
-           class="placeholder"
-           aria-label={r.authorName ?? r.sourceLabel}
-        >
-          <Icon name="user" aria-hidden="true" />
-        </a>
+    {
+      items.slice(0, 12).map((r) =>
+        r.authorPhoto ? (
+          <a
+            href={r.authorUrl ?? r.sourceUrl}
+            rel="noopener"
+            target="_blank"
+            title={r.authorName ?? undefined}
+          >
+            <img
+              src={r.authorPhoto}
+              alt={r.authorName ?? ""}
+              width="32"
+              height="32"
+            />
+          </a>
+        ) : (
+          <a
+            href={r.authorUrl ?? r.sourceUrl}
+            rel="noopener"
+            target="_blank"
+            title={r.authorName ?? undefined}
+            class="placeholder"
+            aria-label={r.authorName ?? r.sourceLabel}
+          >
+            <Icon name="user" aria-hidden="true" />
+          </a>
+        ),
       )
-    ))}
-    {items.length > 12 && (
-      <span class="overflow">+{items.length - 12}</span>
-    )}
+    }
+    {items.length > 12 && <span class="overflow">+{items.length - 12}</span>}
   </div>
 </div>
 
@@ -73,6 +82,18 @@ const { icon, label, items } = Astro.props;
     align-items: center;
   }
 
+  .avatars a {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    margin-left: -0.375rem;
+  }
+
+  .avatars a:first-child {
+    margin-left: 0;
+  }
+
   .avatars img,
   .avatars .placeholder {
     display: block;
@@ -81,14 +102,8 @@ const { icon, label, items } = Astro.props;
     border-radius: var(--radius-full);
     object-fit: cover;
     border: 2px solid var(--color-bg);
-    margin-left: -0.375rem;
     transition: transform var(--transition);
     text-decoration: none;
-  }
-
-  .avatars a:first-child img,
-  .avatars a:first-child.placeholder {
-    margin-left: 0;
   }
 
   .avatars img:hover,
@@ -102,7 +117,7 @@ const { icon, label, items } = Astro.props;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-surface-2);
+    background-color: var(--color-surface-2, var(--color-surface));
     color: var(--color-text-tertiary);
   }
 
