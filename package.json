@@ -14,13 +14,13 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.0.0",
-    "@indiepub/admin": "1.0.0-beta.27",
-    "@indiepub/astro": "1.0.0-beta.27",
+    "@indiepub/admin": "1.0.0-beta.28",
+    "@indiepub/astro": "1.0.0-beta.28",
     "astro-icon": "^1.1.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
-    "@indiepub/db": "1.0.0-beta.2",
+    "@indiepub/db": "1.0.0-beta.28",
     "@indiepub/types": "1.0.0-beta.2",
     "astro": "^6.0.0",
     "typescript": "^5.9.3",
