@@ -1,16 +1,18 @@
 ---
-import { Icon } from 'astro-icon/components';
-import Feed from '../../layouts/Feed.astro';
-import { setCollectionCacheHeaders } from '../../lib/cache';
+import { Icon } from "astro-icon/components";
+import Feed from "../../layouts/Feed.astro";
+import { setCollectionCacheHeaders } from "../../lib/cache";
 
 if (!Astro.locals.indiepub) {
-  return new Response('Service unavailable', { status: 503 });
+  return new Response("Service unavailable", { status: 503 });
 }
 
 const { content } = Astro.locals.indiepub;
 const memberTier = Astro.locals.member?.tier ?? null;
-const articles = await content.getEntries('article', { memberTier, limit: 50 });
-const countsMap = await content.getBatchInteractionCounts(articles.map(e => e.id));
+const articles = await content.getEntries("article", { memberTier, limit: 50 });
+const countsMap = await content.getBatchInteractionCounts(
+  articles.map((e) => e.id),
+);
 
 setCollectionCacheHeaders(Astro.response, !!Astro.locals.isAdmin, articles);
 ---
@@ -21,50 +23,84 @@ setCollectionCacheHeaders(Astro.response, !!Astro.locals.isAdmin, articles);
     <p class="text-secondary text-sm">Long-form writing.</p>
   </div>
 
-  {articles.length > 0 ? (
-    <ol class="article-list" reversed>
-      {articles.map(entry => (
-        <li class="article-item">
-          <div class="article-item__date text-sm text-secondary">
-            <time datetime={entry.publishedAt?.toISOString() ?? entry.createdAt.toISOString()}>
-              {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
-                entry.publishedAt ?? entry.createdAt
-              )}
-            </time>
-          </div>
-          <div class="article-item__body">
-            <h2 class="article-item__title">
-              <a href={`/posts/${entry.slug}`}>{entry.name}</a>
-            </h2>
-            {entry.summary && (
-              <p class="article-item__summary text-sm text-secondary">{entry.summary}</p>
-            )}
-            {entry.tags && entry.tags.length > 0 && (
-              <ul class="tag-list" aria-label="Tags">
-                {entry.tags.map((tag: string) => (
-                  <li>
-                    <a href={`/tags/${encodeURIComponent(tag)}`} class="tag">#{tag}</a>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {(() => {
-              const c = countsMap.get(entry.id);
-              return c && (c.likes > 0 || c.reposts > 0 || c.comments > 0) ? (
-                <div class="ix-bar">
-                  {c.likes > 0 && <span class="ix-count"><Icon name="heart" aria-hidden="true" />{c.likes}</span>}
-                  {c.reposts > 0 && <span class="ix-count"><Icon name="repeat-2" aria-hidden="true" />{c.reposts}</span>}
-                  {c.comments > 0 && <span class="ix-count"><Icon name="message-square" aria-hidden="true" />{c.comments}</span>}
-                </div>
-              ) : null;
-            })()}
-          </div>
-        </li>
-      ))}
-    </ol>
-  ) : (
-    <p class="empty-state text-secondary">No articles yet.</p>
-  )}
+  {
+    articles.length > 0 ? (
+      <ol class="article-list" reversed>
+        {articles.map((entry) => {
+          const counts = countsMap.get(entry.id);
+          const hasCounts =
+            counts &&
+            (counts.likes > 0 || counts.reposts > 0 || counts.comments > 0);
+          return (
+            <li class="article-item">
+              <div class="article-item__date text-sm text-secondary">
+                <time
+                  datetime={
+                    entry.publishedAt?.toISOString() ??
+                    entry.createdAt.toISOString()
+                  }
+                >
+                  {new Intl.DateTimeFormat("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  }).format(entry.publishedAt ?? entry.createdAt)}
+                </time>
+              </div>
+              <div class="article-item__body">
+                <h2 class="article-item__title">
+                  <a href={`/posts/${entry.slug}`}>{entry.name}</a>
+                </h2>
+                {entry.summary && (
+                  <p class="article-item__summary text-sm text-secondary">
+                    {entry.summary}
+                  </p>
+                )}
+                {entry.tags && entry.tags.length > 0 && (
+                  <ul class="tag-list" aria-label="Tags">
+                    {entry.tags.map((tag: string) => (
+                      <li>
+                        <a
+                          href={`/tags/${encodeURIComponent(tag)}`}
+                          class="tag"
+                        >
+                          #{tag}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {hasCounts && (
+                  <div class="ix-bar">
+                    {counts.likes > 0 && (
+                      <span class="ix-count">
+                        <Icon name="heart" aria-hidden="true" />
+                        {counts.likes}
+                      </span>
+                    )}
+                    {counts.reposts > 0 && (
+                      <span class="ix-count">
+                        <Icon name="repeat-2" aria-hidden="true" />
+                        {counts.reposts}
+                      </span>
+                    )}
+                    {counts.comments > 0 && (
+                      <span class="ix-count">
+                        <Icon name="message-square" aria-hidden="true" />
+                        {counts.comments}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    ) : (
+      <p class="empty-state text-secondary">No articles yet.</p>
+    )
+  }
 </Feed>
 
 <style>
