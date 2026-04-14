@@ -1,14 +1,14 @@
 ---
-import { Icon } from 'astro-icon/components';
-import Feed from '../layouts/Feed.astro';
-import SocialIcon from '../components/SocialIcon.astro';
-import { setStaticCacheHeaders } from '../lib/cache';
+import { Icon } from "astro-icon/components";
+import Feed from "../layouts/Feed.astro";
+import SocialIcon from "../components/SocialIcon.astro";
+import { setStaticCacheHeaders } from "../lib/cache";
 
 if (!Astro.locals.indiepub) {
-  return new Response('Service unavailable', { status: 503 });
+  return new Response("Service unavailable", { status: 503 });
 }
 
-const { content, config } = Astro.locals.indiepub;
+const { content } = Astro.locals.indiepub;
 const author = await content.getAuthor();
 
 setStaticCacheHeaders(Astro.response);
@@ -17,81 +17,50 @@ setStaticCacheHeaders(Astro.response);
 <Feed title="About">
   <article class="about h-card">
     <!-- Avatar -->
-    {author.photo && (
-      <img
-        class="u-photo about__avatar"
-        src={author.photo}
-        alt={author.name}
-        width="96"
-        height="96"
-      />
-    )}
+    {
+      author.photo && (
+        <img
+          class="u-photo about__avatar"
+          src={author.photo}
+          alt={author.name}
+          width="96"
+          height="96"
+        />
+      )
+    }
 
     <!-- Identity -->
     <div class="about__identity">
       <h1 class="p-name about__name">{author.name}</h1>
-      {author.url && (
-        <a href={author.url} class="u-url about__url" rel="me">
-          {new URL(author.url).hostname.replace(/^www\./, '')}
-        </a>
-      )}
-      {author.bio && (
-        <p class="p-note about__bio">{author.bio}</p>
-      )}
+      {
+        author.url && (
+          <a href={author.url} class="u-url about__url" rel="me">
+            {new URL(author.url).hostname.replace(/^www\./, "")}
+          </a>
+        )
+      }
+      {author.bio && <p class="p-note about__bio">{author.bio}</p>}
     </div>
 
     <!-- Social links with rel=me -->
-    {(author.socialLinks && author.socialLinks.length > 0) && (
-      <nav class="about__social" aria-label="Social profiles">
-        {author.socialLinks.map(link => (
-          <a
-            href={link.url}
-            class="about__social-link u-url"
-            rel="me noopener"
-            target="_blank"
-            aria-label={link.label}
-          >
-            <SocialIcon icon={link.icon} aria-hidden="true" />
-            <span>{link.label}</span>
-          </a>
-        ))}
-      </nav>
-    )}
-
-    <!-- Syndication profiles -->
-    {(config?.syndication?.bluesky || config?.syndication?.mastodon) && (
-      <section class="about__section" aria-labelledby="syndication-heading">
-        <h2 id="syndication-heading">Find me on</h2>
-        <ul class="about__link-list">
-          {config.syndication.bluesky && (
-            <li>
-              <a
-                href={`https://bsky.app/profile/${config.syndication.bluesky.handle}`}
-                class="u-url"
-                rel="me noopener"
-                target="_blank"
-              >
-                <Icon name="social/bluesky" aria-hidden="true" />
-                @{config.syndication.bluesky.handle}
-              </a>
-            </li>
-          )}
-          {config.syndication.mastodon && (
-            <li>
-              <a
-                href={`https://${config.syndication.mastodon.instance}/@${config.syndication.mastodon.handle}`}
-                class="u-url"
-                rel="me noopener"
-                target="_blank"
-              >
-                <Icon name="social/mastodon" aria-hidden="true" />
-                @{config.syndication.mastodon.handle}@{config.syndication.mastodon.instance}
-              </a>
-            </li>
-          )}
-        </ul>
-      </section>
-    )}
+    {
+      author.socialLinks && author.socialLinks.length > 0 && (
+        <nav class="about__social" aria-label="Social profiles">
+          {author.socialLinks.map((link) => (
+            <a
+              href={link.url}
+              class="about__social-link u-url"
+              rel="me noopener"
+              target="_blank"
+              aria-label={link.label}
+            >
+              <SocialIcon icon={link.icon} aria-hidden="true" />
+              <span>{link.label}</span>
+            </a>
+          ))}
+        </nav>
+      )
+    }
 
     <!-- Feed links -->
     <section class="about__section" aria-labelledby="feeds-heading">
@@ -186,7 +155,10 @@ setStaticCacheHeaders(Astro.response);
     font-weight: var(--weight-medium);
     color: var(--color-text-secondary);
     text-decoration: none;
-    transition: color var(--transition), border-color var(--transition), background-color var(--transition);
+    transition:
+      color var(--transition),
+      border-color var(--transition),
+      background-color var(--transition);
   }
 
   .about__social-link:hover {

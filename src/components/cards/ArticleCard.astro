@@ -1,8 +1,8 @@
 ---
-import { Icon } from 'astro-icon/components';
-import type { Entry, InteractionCounts } from '@indiepub/types';
-import TagList from '../TagList.astro';
-import CardFooter from '../CardFooter.astro';
+import { Icon } from "astro-icon/components";
+import type { Entry, InteractionCounts } from "@indiepub/types";
+import TagList from "../TagList.astro";
+import CardFooter from "../CardFooter.astro";
 
 interface Props {
   entry: Entry;
@@ -18,26 +18,27 @@ const { entry, counts, detailUrl, pubDate, badgeLabel } = Astro.props;
 <div>
   <header>
     {badgeLabel && <span class="type-badge">{badgeLabel}</span>}
-    {(entry.visibility === 'members' || entry.visibility === 'paid') && (
-      <span class="visibility-badge">
-        <Icon name="lock" aria-hidden="true" />
-        {entry.visibility === 'paid' ? 'Paid' : 'Members'}
-      </span>
-    )}
+    {
+      (entry.visibility === "members" || entry.visibility === "paid") && (
+        <span class="visibility-badge">
+          <Icon name="lock" aria-hidden="true" />
+          {entry.visibility === "paid" ? "Paid" : "Members"}
+        </span>
+      )
+    }
   </header>
   <h2 class="p-name">
     <a href={detailUrl} class="u-url">{entry.name}</a>
   </h2>
-  {entry.summary && (
-    <p class="p-summary">{entry.summary}</p>
-  )}
-  {entry.tags && entry.tags.length > 0 && (
-    <TagList tags={entry.tags} />
-  )}
-  <CardFooter detailUrl={detailUrl} pubDate={pubDate} counts={counts} syndicationUrls={entry.syndicationUrls}>
-    <a slot="actions" href={detailUrl} class="read-link">
-      Read article →
-    </a>
+  {entry.summary && <p class="p-summary">{entry.summary}</p>}
+  {entry.tags && entry.tags.length > 0 && <TagList tags={entry.tags} />}
+  <CardFooter
+    detailUrl={detailUrl}
+    pubDate={pubDate}
+    counts={counts}
+    syndicationUrls={entry.syndicationUrls}
+  >
+    <a slot="actions" href={detailUrl} class="read-link"> Read article → </a>
   </CardFooter>
 </div>
 
@@ -66,25 +67,6 @@ const { entry, counts, detailUrl, pubDate, badgeLabel } = Astro.props;
     background-color: var(--color-brand-muted);
     padding: 0.15em 0.5em;
     border-radius: var(--radius-full);
-  }
-
-  .visibility-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-warning, #b58a00);
-    background-color: color-mix(in oklch, var(--color-warning, #b58a00) 12%, transparent);
-    padding: 0.15em 0.5em;
-    border-radius: var(--radius-full);
-  }
-
-  .visibility-badge :global(svg) {
-    width: 0.7em;
-    height: 0.7em;
   }
 
   h2 {

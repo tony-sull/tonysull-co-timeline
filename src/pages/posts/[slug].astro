@@ -1,43 +1,52 @@
 ---
-import Feed from '../../layouts/Feed.astro';
-import PostDetail from '../../components/PostDetail.astro';
-import { setEntryCacheHeaders } from '../../lib/cache';
+import Feed from "../../layouts/Feed.astro";
+import PostDetail from "../../components/PostDetail.astro";
+import { setEntryCacheHeaders } from "../../lib/cache";
+import { plainText } from "../../lib/format";
 
 if (!Astro.locals.indiepub) {
-  return new Response('Service unavailable', { status: 503 });
+  return new Response("Service unavailable", { status: 503 });
 }
 
 const { slug } = Astro.params;
-if (!slug) return new Response('Not found', { status: 404 });
+if (!slug) return new Response("Not found", { status: 404 });
 
 const { content } = Astro.locals.indiepub;
 
 const entry = await content.getEntry(slug);
-if (!entry) return new Response('Not found', { status: 404 });
+if (!entry) return new Response("Not found", { status: 404 });
 
 // Private entries are never accessible via the web
-if (entry.visibility === 'private') return new Response('Not found', { status: 404 });
+if (entry.visibility === "private")
+  return new Response("Not found", { status: 404 });
 
 // Members-only entries require an active session
-if (entry.visibility === 'members' && !Astro.locals.member) {
+if (entry.visibility === "members" && !Astro.locals.member) {
   return Response.redirect(
-    new URL(`/login?next=${encodeURIComponent(Astro.url.pathname)}`, Astro.request.url),
+    new URL(
+      `/login?next=${encodeURIComponent(Astro.url.pathname)}`,
+      Astro.request.url,
+    ),
     302,
   );
 }
 
 // Paid entries require a paid member session
-if (entry.visibility === 'paid') {
+if (entry.visibility === "paid") {
   if (!Astro.locals.member) {
     return Response.redirect(
-      new URL(`/login?next=${encodeURIComponent(Astro.url.pathname)}`, Astro.request.url),
+      new URL(
+        `/login?next=${encodeURIComponent(Astro.url.pathname)}`,
+        Astro.request.url,
+      ),
       302,
     );
   }
   // Free members can see the page but content will be gated
 }
 
-const isPaidLocked = entry.visibility === 'paid' && Astro.locals.member?.tier !== 'paid';
+const isPaidLocked =
+  entry.visibility === "paid" && Astro.locals.member?.tier !== "paid";
 
 const [webmentions, interactions, interactionCounts] = await Promise.all([
   content.getWebmentions(entry.id),
@@ -45,7 +54,8 @@ const [webmentions, interactions, interactionCounts] = await Promise.all([
   content.getInteractionCounts(entry.id),
 ]);
 
-const pageTitle = entry.name ?? (entry.content ? entry.content.replace(/<[^>]*>/g, '').slice(0, 60) : 'Post');
+const pageTitle =
+  entry.name ?? (entry.content ? plainText(entry.content, 60) : "Post");
 const pageDescription = entry.summary ?? undefined;
 const ogImage = `/og/${entry.slug}`;
 

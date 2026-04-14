@@ -1,6 +1,6 @@
 ---
-import type { Entry } from '@indiepub/types';
-import { formatDate } from '../lib/format.ts';
+import type { Entry } from "@indiepub/types";
+import { formatDate, plainText } from "../lib/format.ts";
 
 interface Props {
   entry: Entry | null;
@@ -9,13 +9,16 @@ interface Props {
 const { entry } = Astro.props;
 if (!entry) return;
 
-const snippet = entry.content?.replace(/<[^>]*>/g, '').slice(0, 140) ?? '';
+const snippet = entry.content ? plainText(entry.content) : "";
 ---
 
 <section>
   <header>
     <strong>Now</strong>
-    <time datetime={entry.publishedAt?.toISOString() ?? entry.createdAt.toISOString()}>
+    <time
+      datetime={entry.publishedAt?.toISOString() ??
+        entry.createdAt.toISOString()}
+    >
       {formatDate(entry.publishedAt ?? entry.createdAt)}
     </time>
   </header>

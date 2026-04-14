@@ -1,7 +1,8 @@
 ---
-import type { Entry, InteractionCounts } from '@indiepub/types';
-import PhotoCarousel from '@indiepub/astro/components/PhotoCarousel.astro';
-import CardFooter from '../CardFooter.astro';
+import type { Entry, InteractionCounts } from "@indiepub/types";
+import PhotoCarousel from "@indiepub/astro/components/PhotoCarousel.astro";
+import CardFooter from "../CardFooter.astro";
+import { plainText } from "../../lib/format.ts";
 
 interface Props {
   entry: Entry;
@@ -17,18 +18,31 @@ const { entry, counts, detailUrl, pubDate, badgeLabel } = Astro.props;
 <div>
   <PhotoCarousel
     attachments={entry.attachments!}
-    fallbackAlt={entry.summary ?? entry.name ?? ''}
+    fallbackAlt={entry.summary ?? entry.name ?? ""}
     sizes="(min-width: 768px) 600px, 100vw"
     class="photo-media"
   />
   <div>
-    {(entry.summary || entry.content) && (
-      <p class="p-summary">
-        {entry.summary ?? entry.content?.replace(/<[^>]*>/g, '').slice(0, 140)}
-      </p>
-    )}
-    <CardFooter detailUrl={detailUrl} pubDate={pubDate} counts={counts} syndicationUrls={entry.syndicationUrls}>
-      {badgeLabel && <span slot="after-time" class="type-badge">{badgeLabel}</span>}
+    {
+      (entry.summary || entry.content) && (
+        <p class="p-summary">
+          {entry.summary ?? (entry.content ? plainText(entry.content) : "")}
+        </p>
+      )
+    }
+    <CardFooter
+      detailUrl={detailUrl}
+      pubDate={pubDate}
+      counts={counts}
+      syndicationUrls={entry.syndicationUrls}
+    >
+      {
+        badgeLabel && (
+          <span slot="after-time" class="type-badge">
+            {badgeLabel}
+          </span>
+        )
+      }
     </CardFooter>
   </div>
 </div>

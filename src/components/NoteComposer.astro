@@ -291,7 +291,7 @@ const currentType = types.find((t) => t.value === defaultType) ?? types[0];
     background: var(--color-surface-1);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     min-width: 160px;
     overflow: hidden;
     padding: var(--space-1);
@@ -550,7 +550,7 @@ const currentType = types.find((t) => t.value === defaultType) ?? types[0];
   }
 
   .discard-btn:hover {
-    color: var(--color-error, #b91c1c);
+    color: var(--color-error);
     border-color: transparent;
   }
 
@@ -577,8 +577,8 @@ const currentType = types.find((t) => t.value === defaultType) ?? types[0];
 
   .composer-error {
     padding: var(--space-2) var(--space-3);
-    background: var(--color-error-bg, #fee2e2);
-    color: var(--color-error, #b91c1c);
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
     border-radius: var(--radius-md);
     font-family: var(--font-sans);
     font-size: var(--text-sm);
@@ -739,20 +739,35 @@ const currentType = types.find((t) => t.value === defaultType) ?? types[0];
         .then(async (res) => {
           if (!res.ok) throw new Error("Upload failed");
           const { url } = (await res.json()) as { url: string };
-          placeholder.innerHTML = `
-            <img src="${url}" alt="" class="composer__attachment-img" />
-            <button type="button" class="composer__attachment-remove" aria-label="Remove">\u00d7</button>
-            <input type="hidden" name="photos" value="${url}" />
-          `;
-          placeholder
-            .querySelector(".composer__attachment-remove")
-            ?.addEventListener("click", () => {
-              placeholder.remove();
-            });
+          placeholder.textContent = "";
+
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "";
+          img.className = "composer__attachment-img";
+          placeholder.appendChild(img);
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "composer__attachment-remove";
+          removeBtn.setAttribute("aria-label", "Remove");
+          removeBtn.textContent = "\u00d7";
+          removeBtn.addEventListener("click", () => placeholder.remove());
+          placeholder.appendChild(removeBtn);
+
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.name = "photos";
+          hidden.value = url;
+          placeholder.appendChild(hidden);
         })
         .catch(() => {
-          placeholder.innerHTML =
-            '<div class="composer__attachment-loading" style="color:var(--color-error, red)">Failed</div>';
+          const fail = document.createElement("div");
+          fail.className = "composer__attachment-loading";
+          fail.style.color = "var(--color-error)";
+          fail.textContent = "Failed";
+          placeholder.textContent = "";
+          placeholder.appendChild(fail);
         });
     }
 

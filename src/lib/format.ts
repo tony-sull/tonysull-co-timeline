@@ -57,3 +57,8 @@ export function linkifyHashtags(md: string): string {
   }
   return result.join('');
 }
+
+/** Strip HTML tags and truncate to a plain-text snippet. */
+export function plainText(html: string, maxLength = 140): string {
+  return html.replace(/<[^>]*>/g, '').slice(0, maxLength);
+}

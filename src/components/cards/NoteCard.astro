@@ -1,10 +1,10 @@
 ---
-import { Icon } from 'astro-icon/components';
-import type { Entry, InteractionCounts } from '@indiepub/types';
-import Markdown from '@indiepub/astro/components/Markdown.astro';
-import PhotoCarousel from '@indiepub/astro/components/PhotoCarousel.astro';
-import CardFooter from '../CardFooter.astro';
-import { hostname, linkifyHashtags } from '../../lib/format.ts';
+import { Icon } from "astro-icon/components";
+import type { Entry, InteractionCounts } from "@indiepub/types";
+import Markdown from "@indiepub/astro/components/Markdown.astro";
+import PhotoCarousel from "@indiepub/astro/components/PhotoCarousel.astro";
+import CardFooter from "../CardFooter.astro";
+import { hostname, linkifyHashtags } from "../../lib/format.ts";
 
 interface Props {
   entry: Entry;
@@ -17,35 +17,53 @@ const { entry, counts, detailUrl, pubDate } = Astro.props;
 ---
 
 <div>
-  {(entry.visibility === 'members' || entry.visibility === 'paid') && (
-    <header>
-      <span class="visibility-badge">
-        <Icon name="lock" aria-hidden="true" />
-        {entry.visibility === 'paid' ? 'Paid' : 'Members'}
-      </span>
-    </header>
-  )}
-  {entry.inReplyTo && (
-    <p class="reply-pill">
-      <Icon name="corner-down-right" aria-hidden="true" />
-      <span class="text-secondary text-sm">in reply to </span>
-      <a href={entry.inReplyTo} class="u-in-reply-to" rel="noopener" target="_blank">
-        {hostname(entry.inReplyTo)}
-      </a>
-    </p>
-  )}
-  {entry.content && (
-    <Markdown content={linkifyHashtags(entry.content)} class="e-content" />
-  )}
-  {entry.attachments && entry.attachments.length > 0 && (
-    <PhotoCarousel
-      attachments={entry.attachments}
-      fallbackAlt={entry.summary ?? ''}
-      sizes="(min-width: 768px) 600px, 100vw"
-      class="card-media"
-    />
-  )}
-  <CardFooter detailUrl={detailUrl} pubDate={pubDate} counts={counts} syndicationUrls={entry.syndicationUrls} />
+  {
+    (entry.visibility === "members" || entry.visibility === "paid") && (
+      <header>
+        <span class="visibility-badge">
+          <Icon name="lock" aria-hidden="true" />
+          {entry.visibility === "paid" ? "Paid" : "Members"}
+        </span>
+      </header>
+    )
+  }
+  {
+    entry.inReplyTo && (
+      <p class="reply-pill">
+        <Icon name="corner-down-right" aria-hidden="true" />
+        <span class="text-secondary text-sm">in reply to </span>
+        <a
+          href={entry.inReplyTo}
+          class="u-in-reply-to"
+          rel="noopener"
+          target="_blank"
+        >
+          {hostname(entry.inReplyTo)}
+        </a>
+      </p>
+    )
+  }
+  {
+    entry.content && (
+      <Markdown content={linkifyHashtags(entry.content)} class="e-content" />
+    )
+  }
+  {
+    entry.attachments && entry.attachments.length > 0 && (
+      <PhotoCarousel
+        attachments={entry.attachments}
+        fallbackAlt={entry.summary ?? ""}
+        sizes="(min-width: 768px) 600px, 100vw"
+        class="card-media"
+      />
+    )
+  }
+  <CardFooter
+    detailUrl={detailUrl}
+    pubDate={pubDate}
+    counts={counts}
+    syndicationUrls={entry.syndicationUrls}
+  />
 </div>
 
 <style>
@@ -61,25 +79,6 @@ const { entry, counts, detailUrl, pubDate } = Astro.props;
     align-items: center;
     gap: var(--space-2);
     flex-wrap: wrap;
-  }
-
-  .visibility-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-warning, #b58a00);
-    background-color: color-mix(in oklch, var(--color-warning, #b58a00) 12%, transparent);
-    padding: 0.15em 0.5em;
-    border-radius: var(--radius-full);
-  }
-
-  .visibility-badge :global(svg) {
-    width: 0.7em;
-    height: 0.7em;
   }
 
   .reply-pill {

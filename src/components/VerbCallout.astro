@@ -1,39 +1,40 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Icon } from "astro-icon/components";
+import { VERB_EMOJI, VERB_LABEL } from "../lib/verbs";
 
 interface Props {
   verb: string;
   objectName?: string | undefined;
   objectUrl?: string | undefined;
   /** 'compact' for feed cards, 'large' for detail views */
-  size?: 'compact' | 'large';
+  size?: "compact" | "large";
 }
 
-const { verb, objectName, objectUrl, size = 'compact' } = Astro.props;
+const { verb, objectName, objectUrl, size = "compact" } = Astro.props;
 
-const emojiMap: Record<string, string> = {
-  watch: '📺', read: '📚', listen: '🎧', play: '🎮',
-};
-const labelMap: Record<string, string> = {
-  watch: 'Watched', read: 'Read', listen: 'Listened to', play: 'Played',
-};
-
-const emoji = emojiMap[verb] ?? '';
-const label = labelMap[verb] ?? verb;
+const emoji = VERB_EMOJI[verb] ?? "";
+const label = VERB_LABEL[verb] ?? verb;
 ---
 
 <div class={`callout--${size}`}>
   <span aria-hidden="true">{emoji}</span>
   <span>
-    {label}{' '}
-    {objectUrl ? (
-      <a href={objectUrl} class={`u-${verb}-of`} rel="noopener" target="_blank">
-        {objectName ?? objectUrl}
-        <Icon name="external-link" aria-hidden="true" />
-      </a>
-    ) : (
-      <strong class={`p-${verb}-of`}>{objectName}</strong>
-    )}
+    {label}{" "}
+    {
+      objectUrl ? (
+        <a
+          href={objectUrl}
+          class={`u-${verb}-of`}
+          rel="noopener"
+          target="_blank"
+        >
+          {objectName ?? objectUrl}
+          <Icon name="external-link" aria-hidden="true" />
+        </a>
+      ) : (
+        <strong class={`p-${verb}-of`}>{objectName}</strong>
+      )
+    }
   </span>
 </div>
 
