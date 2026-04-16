@@ -69,7 +69,7 @@
   --color-error-text: oklch(45% 0.18 25);
 
   /* ── Typography ─────────────────────────────────────────── */
-  --font-sans: system-ui, sans-serif;
+  --font-sans: system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   --font-mono: ui-monospace, monospace;
 
   --text-xs: 0.75rem;
