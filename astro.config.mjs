@@ -43,7 +43,7 @@ export default defineConfig({
 
       subscriptions: {
         enabled: true,
-        fromEmail: 'dev@tonysull.co',
+        fromEmail: 'login@tonysull.co',
       },
     }),
     indiepubAdmin(),
